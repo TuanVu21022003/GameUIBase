@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: HeartGlobalConfig
   m_EditorClassIdentifier: Assembly-CSharp::HeartGlobalConfig
   <MaxHeart>k__BackingField: 5
-  <TimeRefillHeart>k__BackingField: 300
+  <TimeRefillHeart>k__BackingField: 30

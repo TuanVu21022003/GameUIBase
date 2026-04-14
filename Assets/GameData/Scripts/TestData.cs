@@ -21,7 +21,7 @@ public class TestData : MonoBehaviour
 
     private void Start()
     {
-        
+        Init();
     }
 
     [Button]
@@ -101,6 +101,18 @@ public class TestData : MonoBehaviour
     [Button]
     private void TestAddOneHeart()
     {
-        HeartManager.Instance.UseHeart(1);
+        HeartManager.Instance.RefillAddOnHeart();
+    }
+    
+    [Button]
+    private void TestAddFullHeart()
+    {
+        HeartManager.Instance.RefillFullHeart();
+    }
+    
+    [Button]
+    private void TestAddInfiniteHeart(int timeAdd)
+    {
+        HeartManager.Instance.AddHeartInfiniteTime(new BigNumber(timeAdd));
     }
 }

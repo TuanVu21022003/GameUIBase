@@ -10,48 +10,12 @@ public class HeartManager : Singleton<HeartManager>
     public Reactive<string> timeToAddAllHeart = new("");
     public Reactive<string> timeToAddOneHeart = new("");
     public Reactive<string> timeToEndInfiniteHeart = new("");
+    public Reactive<bool> isOnInfiniteHeart;
     public List<int> listID;
-    
-    [ShowInInspector]
-    public IHeartState currentHeartState;
-    
-    private IHeartState normalHeartState = new NormalHeartState();
-    private IHeartState addInfinityHeartState = new AddInfinityHeartState();
-    private IHeartState addOneHeartState = new AddOneHeartState();
 
     private void Start()
     {
         LoadData();
-        InitState();
-    }
-
-    private void InitState()
-    {
-        addInfinityHeartState.SetActionCallback(CallBackInfiniteHeart);
-        addInfinityHeartState.InitState();
-        
-        normalHeartState.SetActionCallback(CallBackAddAllHeart);
-        normalHeartState.InitState();
-        
-        addOneHeartState.SetActionCallback(CallbackAddOneHeart);
-        addOneHeartState.InitState();
-    }
-
-    private void CallbackAddOneHeart()
-    {
-        AddOneHeart();
-    }
-
-    private void CallBackInfiniteHeart()
-    {
-        
-    }
-
-    private void CallBackAddAllHeart()
-    {
-        AddHeart((HeartGlobalConfig.Instance.MaxHeart - heartResource.Amount).ToInt());
-        normalHeartState.ResetTime();
-        addOneHeartState.ResetTime();
     }
 
     private void LoadData()
@@ -65,21 +29,21 @@ public class HeartManager : Singleton<HeartManager>
         {
             FirstTimeInit();
         }
-        //
-        // if (!timeToEndInfiniteHeart.Value.Equals(""))
-        // {
-        //     CheckTimeEndInfiniteHeart();
-        // }
-        //
-        // if (!timeToAddAllHeart.Value.Equals(""))
-        // {
-        //     CheckTimeAddAllHeart();
-        // }
-        //
-        // if (!timeToAddOneHeart.Value.Equals(""))
-        // {
-        //     CheckTimeAddOneHeart();
-        // }
+
+        if (!timeToEndInfiniteHeart.Value.Equals(""))
+        {
+            CheckTimeEndInfiniteHeart();
+        }
+
+        if (!timeToAddAllHeart.Value.Equals(""))
+        {
+            CheckTimeAddAllHeart();
+        }
+
+        if (!timeToAddOneHeart.Value.Equals(""))
+        {
+            CheckTimeAddOneHeart();
+        }
     }
 
     private void CheckTimeEndInfiniteHeart()
@@ -91,7 +55,7 @@ public class HeartManager : Singleton<HeartManager>
         Debug.Log("date time: " + timeEndInfiniteHeart);
         if (timeEndInfiniteHeart.Subtract(currentTime).TotalSeconds > 0)
         {
-            // isOnInfiniteHeart.Value = true;
+            isOnInfiniteHeart.Value = true;
             TimeManager.Instance.RegisterEventTime(timeEndInfiniteHeart, ResetTimeInfiniteHeart, GetId());
             return;
         }
@@ -99,10 +63,36 @@ public class HeartManager : Singleton<HeartManager>
         ResetTimeInfiniteHeart(-1);
     }
 
+    private void CheckTimeAddOneHeart()
+    {
+        var currentTime = TimeManager.Instance.GetCurrentTime();
+        var nextHeartAddTime = timeToAddOneHeart.Value.ToDateTime();
+
+        if (nextHeartAddTime.Subtract(currentTime).TotalSeconds > 0)
+        {
+            TimeManager.Instance.RegisterEventTime(nextHeartAddTime, AddOneHeart, GetId());
+            return;
+        }
+
+        AddOneHeart(-1);
+    }
+
+    private void CheckTimeAddAllHeart()
+    {
+        var currentTime = TimeManager.Instance.GetCurrentTime();
+        var nextHeartAddTime = timeToAddAllHeart.Value.ToDateTime();
+
+        if (nextHeartAddTime.Subtract(currentTime).TotalSeconds > 0) return;
+
+        AddHeart((HeartGlobalConfig.Instance.MaxHeart - heartResource.Amount).ToInt());
+        ResetTimeToAddHeart();
+        ResetTimeToAddOneHeart();
+    }
+
     private void ResetTimeInfiniteHeart(int idCallBack, bool ads = false)
     {
         timeToEndInfiniteHeart.Value = "";
-        //isOnInfiniteHeart.Value = false;
+        isOnInfiniteHeart.Value = false;
         HeartDataSave.Instance.SaveData();
     }
 
@@ -137,18 +127,43 @@ public class HeartManager : Singleton<HeartManager>
         SaveHeartData();
         if (heartResource.Amount < HeartGlobalConfig.Instance.MaxHeart)
         {
-            normalHeartState.SaveTime();
+            SaveTimeToAddAllHeart();
             if (!timeToAddOneHeart.Value.Equals(""))
                 return;
-            addOneHeartState.SaveTime();
+            SaveTimeToAddOneHeart();
         }
     }
 
-    private void AddOneHeart(bool addByAds = false)
+    private void SaveTimeToAddOneHeart(bool addByAds = false)
+    {
+        var currentTime = TimeManager.Instance.GetCurrentTime();
+        var defaultMinutesForHeart = HeartGlobalConfig.Instance.TimeRefillHeart;
+        var timeAddHeartString = timeToAddOneHeart.Value.Equals("") || addByAds
+            ? currentTime.AddMinutes(defaultMinutesForHeart).ToEnUsString()
+            : timeToAddOneHeart.Value.ToDateTime().AddMinutes(defaultMinutesForHeart).ToEnUsString();
+        timeToAddOneHeart.Value = timeAddHeartString;
+        TimeManager.Instance.RegisterEventTime(timeAddHeartString.ToDateTime(), AddOneHeart, GetId());
+        HeartDataSave.Instance.SaveData();
+    }
+
+    private void SaveTimeToAddAllHeart()
+    {
+        var currentTime = TimeManager.Instance.GetCurrentTime();
+        var defaultMinutesForHeart = HeartGlobalConfig.Instance.TimeRefillHeart;
+        var nextHeartAddTime = timeToAddAllHeart.Value.Equals("")
+            ? currentTime.AddMinutes(defaultMinutesForHeart)
+            : timeToAddAllHeart.Value.ToDateTime().AddMinutes(defaultMinutesForHeart);
+
+        var timeToAddHeartString = nextHeartAddTime.ToEnUsString();
+        timeToAddAllHeart.Value = timeToAddHeartString;
+        HeartDataSave.Instance.SaveData();
+    }
+
+    private void AddOneHeart(int idCallBack, bool addByAds = false)
     {
         AddHeart(1, addByAds);
-        // if (listID.Contains(idCallBack))
-        //     listID.Remove(idCallBack);
+        if (listID.Contains(idCallBack))
+            listID.Remove(idCallBack);
     }
 
     private void AddHeart(int amount, bool addByAds = false)
@@ -157,18 +172,13 @@ public class HeartManager : Singleton<HeartManager>
         SaveHeartData();
         if (heartResource.Amount >= HeartGlobalConfig.Instance.MaxHeart && timeToAddAllHeart.Value != "")
         {
-            normalHeartState.ResetTime();
-            addOneHeartState.ResetTime();
-        }
-
-        if (addByAds)
-        {
-            normalHeartState.ReduceTime();
+            ResetTimeToAddHeart();
+            ResetTimeToAddOneHeart();
         }
 
         if (heartResource.Amount < HeartGlobalConfig.Instance.MaxHeart)
         {
-            addOneHeartState.SaveTime();
+            SaveTimeToAddOneHeart(addByAds);
         }
 
         HeartDataSave.Instance.SaveData();
@@ -181,17 +191,19 @@ public class HeartManager : Singleton<HeartManager>
 
     public void RefillAddOnHeart()
     {
-        (addOneHeartState as AddOneHeartState)?.RemoveEvent();
-        AddOneHeart(true);
+        for (var i = listID.Count - 1; i >= 0; i--)
+        {
+            TimeManager.Instance.RemoveEvent(listID[i]);
+            listID.RemoveAt(i);
+        }
+        AddOneHeart(-1, true);
     }
 
     public void RefillFullHeart()
     {
         heartResource.Amount = HeartGlobalConfig.Instance.MaxHeart;
-        
-        addOneHeartState.ResetTime();
-        normalHeartState.ResetTime();
-        
+        ResetTimeToAddHeart();
+        ResetTimeToAddOneHeart();
         TimeManager.Instance.ClearScheduledEvents();
         //listID.Clear();
         SaveHeartData();
@@ -202,7 +214,7 @@ public class HeartManager : Singleton<HeartManager>
         return heartResource.Amount < HeartGlobalConfig.Instance.MaxHeart;
     }
 
-    public int GetId()
+    private int GetId()
     {
         var idReturn = 0;
         while (listID.Contains(idReturn))
@@ -222,14 +234,14 @@ public class HeartManager : Singleton<HeartManager>
 
     private void SetTimeInfinite(BigNumber rewardAmount)
     {
-        //isOnInfiniteHeart.Value = true;
+        isOnInfiniteHeart.Value = true;
         var timeInfinite = TimeManager.Instance.GetCurrentTime();
         //Debug.Log(timeInfinite);
         if (!timeToEndInfiniteHeart.Value.Equals(""))
         {
             timeInfinite = timeToEndInfiniteHeart.Value.ToDateTime();
         }
-        var timeEnd = timeInfinite.AddHours(rewardAmount.ToFloat());
+        var timeEnd = timeInfinite.AddSeconds(rewardAmount.ToFloat());
        // Debug.Log(timeInfinite);
         timeToEndInfiniteHeart.Value = timeEnd.ToEnUsString();
         TimeManager.Instance.RegisterEventTime(timeEnd, ResetTimeInfiniteHeart, GetId());
