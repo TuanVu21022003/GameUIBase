@@ -1,6 +1,4 @@
 using Core;
-using Core.GamePlay;
-using CoreGame.GameGlobalConfig;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -14,7 +12,7 @@ public class UIPlayButtonGraphic : MonoBehaviour
     [field: SerializeField] private GameObject SuperHardLevel {get; set;}
     private void Start()
     {
-        Level = GameManager.Instance.Level;
+        Level = PlayerInfoDataSave.Instance.playerLevel;
         Level.Subscribe(OnLevelChange).AddTo(this);
     }
 

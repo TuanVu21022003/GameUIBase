@@ -7,8 +7,6 @@ using LitMotion;
 using Sirenix.OdinInspector;
 using TMPro;
 using TW.UGUI.Core.Activities;
-using TW.UGUI.Core.Screens;
-using TW.UGUI.Core.Views;
 using TW.UGUI.MVPPattern;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -46,9 +44,6 @@ namespace Core.UI.Activities
         [Serializable]
         public class UIModel : IAModel
         {
-            public Func<UniTask> LoadingTask { get; set; }
-            public Func<UniTask> OnLoadingProcessComplete { get; set; }
-
             public UniTask Initialize(Memory<object> args)
             {
                 return UniTask.CompletedTask;
@@ -106,7 +101,8 @@ namespace Core.UI.Activities
                 IsLoadingComplete = false;
                 View.LoadDescriptionText.text = "Loading Assets...";
                 UpdateProgress(0.2f);
-                await PoolManager.Instance.FirstInitPool();
+                // Loading assets
+                // await PoolManager.Instance.FirstInitPool();
                 View.LoadDescriptionText.text = "Loading UI...";
                 UpdateProgress(0.9f);
                 await DoneFirstLoading();
@@ -142,23 +138,6 @@ namespace Core.UI.Activities
             
             private async UniTask DoneFirstLoading()
             {
-                // if (GameManager.Instance.TryLoadLevelPlaying())
-                // {
-                //     ScreenOptions viewOption = new ScreenOptions(nameof(ScreenInGame), stack: false);
-                //     await ScreenContainer.Find(ContainerKey.Screens).PushAsync(viewOption);
-                // }
-                // else if ((PlayerResourceManager.Instance.HasLife || PlayerResourceManager.Instance.HasInfiniteLife) && IsPlayGameOnStart())
-                // {
-                //     GameManager.Instance.LoadCurrentLevel();
-                //     ScreenOptions viewOption = new ScreenOptions(nameof(ScreenInGame), stack: false);
-                //     await ScreenContainer.Find(ContainerKey.Screens).PushAsync(viewOption);
-                // }
-                // else
-                // {
-                //     ScreenOptions screenOptions = new ScreenOptions(nameof(ScreenMainMenu), stack: false);
-                //     await ScreenContainer.Find(ContainerKey.Screens).PushAsync(screenOptions);
-                // }
-                
                 await LoadSceneAsync(SceneName.InGame);
                 if (GameManager.Instance.TryLoadLevelPlaying())
                 {
