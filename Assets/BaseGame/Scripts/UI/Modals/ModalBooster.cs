@@ -1,8 +1,5 @@
 using System;
-using Core.Manager;
-using CoreData;
 using Cysharp.Threading.Tasks;
-using Manager;
 using TW.UGUI.MVPPattern;
 using UnityEngine;
 using R3;

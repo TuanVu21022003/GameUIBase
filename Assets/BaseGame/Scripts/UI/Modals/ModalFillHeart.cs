@@ -1,7 +1,5 @@
 using System;
-using CoreData;
 using Cysharp.Threading.Tasks;
-using Manager;
 using TW.UGUI.MVPPattern;
 using UnityEngine;
 using R3;
@@ -69,12 +67,12 @@ namespace Core.UI.Modals
             [field: SerializeField] public Transform PosMoneyHome {get; set;}
             [field: SerializeField] public Transform PosMoneyInGame {get; set;}
 
-            public int MaxLife => DefaultGlobalConfig.Instance.DefaultLife;
+            public int MaxLife => HeartGlobalConfig.Instance.MaxHeart;
             
             public UniTask Initialize(Memory<object> args)
             {
                 // BuyHeartWithCoinBtn.SetInteractable(InGameDataManager.Instance.InGameData.ResourceData.IsEnoughResourceValue(ResourceType.Money, DefaultGlobalConfig.Instance.DefaultFullHeartCoin));
-                CoinPriceTxt.text = $"{DefaultGlobalConfig.Instance.DefaultFullHeartCoin}";
+                CoinPriceTxt.text = $"{HeartGlobalConfig.Instance.DefaultFullHeartCoin}";
                 HeartAddAdsTxt.text = "+1";
                 HeartAddCoinTxt.text = $"+{MaxLife}";
                 TxtStateHeart.text = "Next life in:";

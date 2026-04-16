@@ -3,17 +3,16 @@ using Core.UI.Activities;
 using Core.UI.Screens;
 using CoreData;
 using Cysharp.Threading.Tasks;
-using Manager;
 using TW.UGUI.MVPPattern;
 using UnityEngine;
 using R3;
 using Sirenix.OdinInspector;
-using Spine.Unity;
 using TW.UGUI.Core.Activities;
 using TW.UGUI.Core.Modals;
 using TW.UGUI.Core.Screens;
 using TW.UGUI.Core.Views;
 using UnityEngine.UI;
+using GameUI;
 
 namespace Core.UI.Modals
 {
@@ -68,18 +67,10 @@ namespace Core.UI.Modals
             [field: SerializeField]
             public CanvasGroup MainView { get; private set; }
             [field: SerializeField] public Button ButtonPlay {get; private set;}
-            [field: SerializeField] public Button ButtonSetting {get; private set;}
-            // [field: SerializeField] public UIHomeAnim UIHomeAnim {get; private set;}
-            // [field: SerializeField] public LevelUnitList LevelUnitList {get; private set;}
             public UniTask Initialize(Memory<object> args)
             {
                 return UniTask.CompletedTask;
             }
-
-            // public void InitLevel(int level)
-            // {
-            //     LevelUnitList.Init();
-            // }
         }
 
         [HideLabel]
@@ -94,13 +85,6 @@ namespace Core.UI.Modals
                 await Model.Initialize(args);
                 await View.Initialize(args);
                 View.ButtonPlay.SetOnClickDestination(OnClickButtonPlay);
-                View.ButtonSetting.SetOnClickDestination(OnClickButtonSetting);
-            }
-            
-            private async UniTask OnClickButtonSetting()
-            {
-                ViewOptions viewOptions = new ViewOptions(nameof(ModalSetting));
-                await ModalContainer.Find(ContainerKey.Modals).PushAsync(viewOptions);
             }
 
             private async UniTask OnClickButtonPlay()

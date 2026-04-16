@@ -4,10 +4,12 @@ using Core.UI.Screens;
 using CoreData;
 using Cysharp.Text;
 using Cysharp.Threading.Tasks;
+using GameUI;
 using LitMotion;
 using TW.UGUI.Core.Modals;
 using TW.UGUI.Core.Screens;
 using TW.UGUI.Core.Views;
+using TW.Utility.CustomType;
 using UnityEngine;
 
 public class UIMoneyResource : UICurrencyResource
@@ -16,13 +18,6 @@ public class UIMoneyResource : UICurrencyResource
     public bool IsAnim { get; set; } = false;
     private MotionHandle motionHandleText;
     private MotionHandle motionHandleIcon;
-    protected override void TestAddCurrency()
-    {
-        GameResource gameResource = ResourceData.Instance.GetResource(CurrencyType);
-#if CHEAT_ONLY
-        PlayerResourceManager.Instance.AddResourceValue(ResourceType.Money, 1000, "test_add_money_ui", "cheat");    
-#endif
-    }
 
     protected override async UniTask ShowResource()
     {
@@ -46,20 +41,16 @@ public class UIMoneyResource : UICurrencyResource
         ModalContainer modalContainer = ModalContainer.Find(ContainerKey.Modals);
         while (modalContainer.Modals.Count > 0)
         {
-            // if (modalContainer.Current.View is ModalWin or ModalLose)
-            // {
-            //     return;
-            // }
             await modalContainer.PopAsync(true);
         }
     }
 
-    protected override void OnResourceChange(int value)
+    protected override void OnResourceChange(BigNumber value)
     {
-        AmountChange = value;
+        AmountChange = value.ToInt();
         if (!IsAnim)
         {
-            ChangeText(value);
+            ChangeText(AmountChange);
         }
     }
     
@@ -67,7 +58,7 @@ public class UIMoneyResource : UICurrencyResource
     {
         if (motionHandleText.IsActive())
             motionHandleText.TryCancel();
-        motionHandleText = LMotion.Create(Amount, AmountChange, 0.25f).Bind(ChangeText);
+        motionHandleText = LMotion.Create(Amount.ToInt(), AmountChange.ToInt(), 0.25f).Bind(ChangeText);
         
         if (motionHandleIcon.IsActive())
             motionHandleIcon.TryCancel();
@@ -77,45 +68,17 @@ public class UIMoneyResource : UICurrencyResource
             .WithLoops(-1, LoopType.Yoyo) // loop vô hạn, kiểu ping-pong
             .Bind(x => IconTransform.localScale = x);
     }
-    
-    private string FormatMoney(int value)
-    {
-        if (value >= 1_000_000_000)
-        {
-            return FormatWithSuffix(value, 1_000_000_000, "B");
-        }
 
-        if (value >= 1_000_000)
-        {
-            return FormatWithSuffix(value, 1_000_000, "M");
-        }
-
-        if (value >= 100_000)
-        {
-            return FormatWithSuffix(value, 1_000, "K");
-        }
-
-        return value.ToString("N0"); // có dấu , cho số thường
-    }
-
-    private string FormatWithSuffix(int value, int divisor, string suffix)
-    {
-        int integerPart = value / divisor;
-        int remainder = value % divisor;
-
-        if (remainder == 0)
-            return $"{integerPart}{suffix}";
-
-        // lấy 1 chữ số thập phân nhưng KHÔNG làm tròn
-        int decimalPart = (remainder * 10) / divisor;
-
-        return $"{integerPart},{decimalPart}{suffix}";
-    }
-
-    protected override void ChangeText(int val)
+    protected override void ChangeText(BigNumber val)
     {
         base.ChangeText(val);
-        TextAmount.SetTextFormat(MyCacheUI.textFormat, FormatMoney(val));
+        TextAmount.SetTextFormat(MyCacheUI.textFormat, val.ToStringUI());
+    }
+
+    private void ChangeText(int val)
+    {
+        base.ChangeText(val);
+        TextAmount.SetTextFormat(MyCacheUI.textFormat, val);
     }
 
     private void OnDestroy()

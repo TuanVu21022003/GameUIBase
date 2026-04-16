@@ -7,4 +7,5 @@ public class HeartGlobalConfig : GlobalConfig<HeartGlobalConfig>
 {
     [field: SerializeField] public int MaxHeart { get; private set; } = 5;
     [field: SerializeField] public int TimeRefillHeart { get; private set; } = 30;
+    [field: SerializeField] public int DefaultFullHeartCoin { get; private set; } = 800;
 }
